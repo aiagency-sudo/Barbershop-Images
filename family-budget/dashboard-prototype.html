@@ -1,0 +1,471 @@
+<title>Hearth Family Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell. Sidebar + 12-col dashboard on desktop; single column + bottom tab bar on phones. */
+:root {
+  --bg: #FAF9F5;        /* ivory page */
+  --surface: #FFFFFF;   /* cards */
+  --sunk: #F2EFE8;      /* tracks, wells */
+  --ink: #221C16;       /* warm brown-black text */
+  --ink-2: #6E6358;     /* secondary text */
+  --line: #E7E1D6;
+  --clay: #C4643F;      /* primary accent (Claude clay) */
+  --clay-soft: #F5E4DA;
+  --brown: #5B3F2C;     /* deep brown: sidebar, emphasis */
+  --brown-ink: #F6EFE7;
+  --teal: #1C7A72;      /* money in / savings / on track */
+  --teal-soft: #DDEFEC;
+  --warn: #A86A12;
+  --warn-soft: #F7EBD4;
+  --bad: #A3322A;
+  --bad-soft: #F6DEDA;
+  --f-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171411; --surface: #221E1A; --sunk: #2C2621; --ink: #F2ECE4; --ink-2: #A99D90; --line: #382F28;
+    --clay: #E3896A; --clay-soft: #3E2A20; --brown: #120F0D; --brown-ink: #EFE6DC;
+    --teal: #55BCB1; --teal-soft: #173835; --warn: #E2A94E; --warn-soft: #3A2C14; --bad: #E7766A; --bad-soft: #3D1F1B;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171411; --surface: #221E1A; --sunk: #2C2621; --ink: #F2ECE4; --ink-2: #A99D90; --line: #382F28;
+  --clay: #E3896A; --clay-soft: #3E2A20; --brown: #120F0D; --brown-ink: #EFE6DC;
+  --teal: #55BCB1; --teal-soft: #173835; --warn: #E2A94E; --warn-soft: #3A2C14; --bad: #E7766A; --bad-soft: #3D1F1B;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+.num { font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--clay); outline-offset: 2px; border-radius: 6px; }
+
+.app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100%; }
+
+/* Sidebar */
+.side { background: var(--brown); color: var(--brown-ink); padding: 24px 16px; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 0; height: 100vh; }
+.brand { display: flex; align-items: center; gap: 10px; padding-inline: 8px; }
+.brand svg { width: 28px; height: 28px; flex: none; }
+.brand b { font: 600 22px/1 var(--f-display); letter-spacing: -0.01em; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: inherit; text-decoration: none; opacity: .78; }
+.nav a:hover { opacity: 1; background: rgba(255,255,255,.06); }
+.nav a[aria-current] { opacity: 1; background: rgba(255,255,255,.1); }
+.nav svg { width: 18px; height: 18px; flex: none; }
+.side .household { margin-top: auto; padding: 14px; border-radius: 12px; background: rgba(255,255,255,.07); font-size: 13px; display: grid; gap: 10px; }
+.side .household small { opacity: .7; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+
+/* Main */
+main { padding-block: 28px 48px; padding-inline: clamp(16px, 3vw, 40px); display: grid; gap: 22px; min-width: 0; }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+.top h1 { font: 500 clamp(28px, 3.4vw, 38px)/1.1 var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -0.015em; }
+.top p { margin: 4px 0 0; color: var(--ink-2); }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-width: 0; max-width: 100%; }
+.top > div { min-width: 0; max-width: 100%; }
+.seg { display: inline-flex; background: var(--sunk); border-radius: 999px; padding: 3px; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg button { flex: none; }
+.seg button { border: 0; background: none; padding: 6px 12px; border-radius: 999px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(40,25,10,.12); }
+.btn { border: 0; border-radius: 999px; padding: 9px 16px; background: var(--clay); color: #fff; font-weight: 600; font-size: 14px; display: inline-flex; gap: 8px; align-items: center; }
+.btn svg { width: 16px; height: 16px; }
+.icon-btn { border: 1px solid var(--line); background: var(--surface); width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center; }
+.icon-btn svg { width: 18px; height: 18px; }
+.av { width: 22px; height: 22px; border-radius: 999px; display: inline-grid; place-items: center; font-size: 11px; font-weight: 600; color: #fff; flex: none; }
+
+.sample { font: 500 11px/1 var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--warn); background: var(--warn-soft); padding: 5px 8px; border-radius: 6px; }
+
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; min-width: 0; }
+.card h2 { font: 600 13px/1.2 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); margin: 0; }
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.card-head a { color: var(--clay); font-size: 13px; font-weight: 600; text-decoration: none; }
+
+/* Hero: safe to spend */
+.hero { grid-column: span 5; background: var(--brown); color: var(--brown-ink); border: 0; display: grid; gap: 18px; }
+.hero h2 { color: inherit; opacity: .75; }
+.hero .big { font: 500 clamp(44px, 5vw, 60px)/1 var(--f-display); letter-spacing: -0.02em; }
+.hero .big small { font-size: .45em; opacity: .7; }
+.hero p { margin: 0; opacity: .82; max-width: 34ch; }
+.pace { display: grid; gap: 8px; }
+.pace .track { position: relative; height: 10px; border-radius: 999px; background: rgba(255,255,255,.14); }
+.pace .fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--clay); }
+.pace .today { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--brown-ink); }
+.pace .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; font-size: 12px; opacity: .8; }
+
+.kpis { grid-column: span 7; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+.kpi { display: grid; gap: 6px; align-content: start; }
+.kpi .v { font: 500 30px/1.1 var(--f-display); letter-spacing: -0.01em; }
+.kpi .d { font-size: 13px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.pill { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.good { background: var(--teal-soft); color: var(--teal); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.neutral { background: var(--sunk); color: var(--ink-2); }
+
+/* Cash flow chart */
+.flow { grid-column: span 7; }
+.chart-wrap { overflow-x: auto; }
+.chart-wrap svg { display: block; width: 100%; min-width: 420px; height: auto; }
+.legend-row { display: flex; gap: 16px; font-size: 13px; color: var(--ink-2); flex-wrap: wrap; }
+.legend-row i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* Bills */
+.bills { grid-column: span 5; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; }
+.list li { display: grid; grid-template-columns: 46px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.list li:first-child { border-top: 0; padding-top: 0; }
+.date { text-align: center; border-radius: 10px; background: var(--sunk); padding: 5px 0; line-height: 1.1; }
+.date b { display: block; font: 600 17px/1.1 var(--f-display); }
+.date span { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.li-main { min-width: 0; }
+.li-main b { font-weight: 500; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.li-main span { font-size: 12px; color: var(--ink-2); }
+.amt { font-family: var(--f-mono); font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
+.amt.in { color: var(--teal); }
+
+/* Budget categories */
+.budget { grid-column: span 7; }
+.cats { display: grid; gap: 14px; }
+.cat { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 12px; align-items: center; }
+.cat .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--sunk); font-size: 15px; color: var(--ink-2); }
+.cat .ic svg { width: 16px; height: 16px; }
+.cat .row1 { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.cat .row1 span { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+.bar { position: relative; height: 8px; border-radius: 999px; background: var(--sunk); margin-top: 6px; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--teal); }
+.bar.warn i { background: var(--warn); }
+.bar.bad i { background: var(--bad); }
+.bar .pace-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .35; }
+.cat .pill { justify-self: end; min-width: 74px; text-align: center; }
+
+/* Goals */
+.goals { grid-column: span 5; display: grid; gap: 16px; align-content: start; }
+.goal { display: grid; grid-template-columns: 64px minmax(0,1fr); gap: 14px; align-items: center; }
+.ring { width: 64px; height: 64px; }
+.goal b { display: block; font-weight: 500; }
+.goal span { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* Transactions */
+.tx { grid-column: span 12; }
+.tx table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tx th { text-align: left; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); padding: 0 10px 10px; border-bottom: 1px solid var(--line); }
+.tx td { padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tx tr:last-child td { border-bottom: 0; }
+.tx td.amt, .tx th.amt { text-align: right; }
+.who { display: inline-flex; align-items: center; gap: 8px; }
+.tag { font-size: 12px; padding: 3px 8px; border-radius: 6px; background: var(--sunk); color: var(--ink-2); white-space: nowrap; }
+.tag.review { background: var(--clay-soft); color: var(--clay); font-weight: 600; }
+.tx-scroll { overflow-x: auto; }
+.tx-scroll table { min-width: 620px; }
+
+/* Bottom tab bar for phones */
+.tabbar { display: none; }
+
+@media (max-width: 1100px) {
+  .hero, .kpis, .flow, .bills, .budget, .goals { grid-column: span 12; }
+}
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { display: none; }
+  main { padding-block: 20px 110px; }
+  .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line); padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); justify-content: space-around; align-items: center; }
+  .tabbar a { display: grid; justify-items: center; gap: 2px; font-size: 11px; color: var(--ink-2); text-decoration: none; padding: 4px 10px; }
+  .tabbar a[aria-current] { color: var(--clay); }
+  .tabbar svg { width: 22px; height: 22px; }
+  .tabbar .fab { width: 52px; height: 52px; border-radius: 999px; background: var(--clay); color: #fff; border: 0; display: grid; place-items: center; margin-top: -26px; box-shadow: 0 6px 16px rgba(196,100,63,.35); }
+  .tools .btn { display: none; }
+}
+@media (max-width: 520px) {
+  .kpis { grid-template-columns: minmax(0,1fr); }
+  .kpi .v { font-size: 26px; }
+  .card { padding: 16px; }
+  .cat .pill { min-width: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar i, .pace .fill { transition: width .6s ease; }
+}
+</style>
+
+<div class="app">
+  <aside class="side" aria-label="Main">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 3 14h4v14h18V14h4L16 3Z" fill="#C4643F"/><path d="M12 28v-7a4 4 0 0 1 8 0v7" fill="#1C7A72"/></svg>
+      <b>Hearth</b>
+    </div>
+    <nav class="nav">
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>Dashboard</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Budget</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h13l-3-3M17 17H4l3 3"/></svg>Transactions</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Bills</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Goals</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+    </nav>
+    <div class="household">
+      <small>Household · 4 members</small>
+      <div id="sideMembers" style="display:flex;gap:6px"></div>
+      <span style="opacity:.75">All accounts synced 4 min ago</span>
+    </div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><span class="sample">Sample data</span></div>
+        <h1>Good evening. October is on track.</h1>
+        <p class="num">Friday, Oct 24, 2026 · 7 days left in the month</p>
+      </div>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Show spending for" id="memberSeg"></div>
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10Z"/></svg></button>
+        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Add expense</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card hero">
+        <h2>Safe to spend</h2>
+        <div class="big num" id="safe"></div>
+        <p id="safeNote"></p>
+        <div class="pace">
+          <div class="track"><div class="fill" id="paceFill"></div><div class="today" id="paceToday"></div></div>
+          <div class="legend num"><span id="paceSpent"></span><span>Line = today (77% of month)</span></div>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="card kpi"><h2>Income this month</h2><div class="v num">$9,200</div><div class="d"><span class="pill good">All paychecks in</span></div></div>
+        <div class="card kpi"><h2>Spent so far</h2><div class="v num" id="kSpent"></div><div class="d" id="kSpentD"></div></div>
+        <div class="card kpi"><h2>Saved this month</h2><div class="v num">$1,450</div><div class="d"><span class="pill good">15.8% savings rate</span>Goal 15%</div></div>
+        <div class="card kpi"><h2>Net worth</h2><div class="v num">$186,420</div><div class="d"><span class="pill good">+$2,310</span>since September</div></div>
+      </div>
+
+      <div class="card flow">
+        <div class="card-head"><h2>Cash flow · last 6 months</h2>
+          <div class="legend-row"><span><i style="background:var(--teal)"></i>Income</span><span><i style="background:var(--clay)"></i>Spending</span></div></div>
+        <div class="chart-wrap" id="flowChart"></div>
+      </div>
+
+      <div class="card bills">
+        <div class="card-head"><h2>Upcoming bills</h2><a href="#">Calendar</a></div>
+        <ul class="list" id="billList"></ul>
+      </div>
+
+      <div class="card budget">
+        <div class="card-head"><h2>Budget by category</h2><span class="pill neutral">Tick = where you should be today</span></div>
+        <div class="cats" id="cats"></div>
+      </div>
+
+      <div class="card goals">
+        <div class="card-head" style="margin:0"><h2>Family goals</h2><a href="#">New goal</a></div>
+        <div id="goalList" style="display:grid;gap:16px"></div>
+      </div>
+
+      <div class="card tx">
+        <div class="card-head"><h2>Recent transactions</h2><a href="#">View all</a></div>
+        <div class="tx-scroll"><table>
+          <thead><tr><th>Date</th><th>Merchant</th><th>Category</th><th>Who</th><th class="amt">Amount</th></tr></thead>
+          <tbody id="txBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>Home</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Budget</a>
+  <button class="fab" aria-label="Add expense"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg>Goals</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
+</nav>
+
+<script>
+(() => {
+  const MONTH_PCT = 0.77; // Oct 24 of 31
+  const members = [
+    { id: "all", name: "Everyone" },
+    { id: "a", name: "Alex", color: "#C4643F" },
+    { id: "s", name: "Sam", color: "#1C7A72" },
+    { id: "m", name: "Maya", color: "#8A5A3B" },
+    { id: "l", name: "Leo", color: "#6A7F3A" }
+  ];
+  const memberById = Object.fromEntries(members.map(m => [m.id, m]));
+
+  // Spending per category, split by who spent it.
+  const cats = [
+    { name: "Housing", icon: "M3 11 12 4l9 7v9H3z", budget: 2400, by: { a: 2400 }, fixed: true },
+    { name: "Groceries", icon: "M5 7h14l-1.5 10h-11zM9 7V5h6v2", budget: 1300, by: { a: 420, s: 398 } },
+    { name: "Dining out", icon: "M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M16 3c-2 2-2 6 0 8v10", budget: 350, by: { a: 120, s: 142, m: 74 } },
+    { name: "Transportation", icon: "M5 16V9l2-4h10l2 4v7M5 16h14M7 19v-3M17 19v-3", budget: 600, by: { a: 210, s: 178 } },
+    { name: "Utilities", icon: "M13 2 4 14h7l-1 8 9-12h-7z", budget: 380, by: { s: 296 }, fixed: true },
+    { name: "Kids & school", icon: "M3 8l9-4 9 4-9 4zM7 10v5c3 2 7 2 10 0v-5", budget: 450, by: { a: 180, s: 210, m: 62, l: 60 } },
+    { name: "Health", icon: "M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z", budget: 300, by: { s: 120 } },
+    { name: "Fun & subscriptions", icon: "M8 5v14l11-7z", budget: 250, by: { a: 48, m: 66, l: 50 } },
+    { name: "Home & shopping", icon: "M4 8h16l-1 12H5zM8 8a4 4 0 0 1 8 0", budget: 400, by: { a: 130, s: 80 } }
+  ];
+
+  const tx = [
+    { d: "Oct 24", m: "Trader Joe's", c: "Groceries", who: "s", amt: -86.42 },
+    { d: "Oct 23", m: "School photo day", c: "Kids & school", who: "a", amt: -38.00, review: true },
+    { d: "Oct 23", m: "Shell", c: "Transportation", who: "a", amt: -54.10 },
+    { d: "Oct 22", m: "Chipotle", c: "Dining out", who: "m", amt: -21.75 },
+    { d: "Oct 22", m: "Steam", c: "Fun & subscriptions", who: "l", amt: -19.99 },
+    { d: "Oct 21", m: "CVS Pharmacy", c: "Health", who: "s", amt: -32.18 },
+    { d: "Oct 20", m: "Payroll · Sam", c: "Income", who: "s", amt: 2300.00 },
+    { d: "Oct 19", m: "Costco", c: "Groceries", who: "a", amt: -212.64 }
+  ];
+
+  const bills = [
+    { day: 26, name: "Car insurance", sub: "Autopay · Joint checking", amt: 188 },
+    { day: 28, name: "Electric", sub: "Estimated from last 3 months", amt: 142 },
+    { day: 29, name: "Internet", sub: "Autopay · Joint checking", amt: 70 },
+    { day: 31, name: "Leo's piano lessons", sub: "Pay manually · Alex", amt: 120 }
+  ];
+
+  const goals = [
+    { name: "Emergency fund", saved: 14200, target: 20000, note: "6 months of expenses" },
+    { name: "Summer trip to Lisbon", saved: 2850, target: 5000, note: "June 2027 · $310/mo to hit it" },
+    { name: "Maya's college fund", saved: 8400, target: 25000, note: "529 plan" }
+  ];
+
+  const flow = [
+    { m: "May", inc: 9200, sp: 8120 },
+    { m: "Jun", inc: 9200, sp: 8760 },
+    { m: "Jul", inc: 9650, sp: 9910 },
+    { m: "Aug", inc: 9200, sp: 8310 },
+    { m: "Sep", inc: 9200, sp: 7950 },
+    { m: "Oct", inc: 9200, sp: 5244, partial: true }
+  ];
+
+  const usd = (n, d = 0) => (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const $ = id => document.getElementById(id);
+  let who = "all";
+
+  function spentFor(cat) {
+    return who === "all" ? Object.values(cat.by).reduce((a, b) => a + b, 0) : (cat.by[who] || 0);
+  }
+
+  function renderMembers() {
+    $("memberSeg").innerHTML = members.map(m => `<button aria-pressed="${m.id === who}" data-id="${m.id}">${m.color ? `<span class="av" style="background:${m.color};width:18px;height:18px;font-size:10px">${m.name[0]}</span>` : ""}${m.name}</button>`).join("");
+    $("sideMembers").innerHTML = members.filter(m => m.color).map(m => `<span class="av" title="${m.name}" style="background:${m.color};width:28px;height:28px;font-size:12px">${m.name[0]}</span>`).join("");
+  }
+
+  function renderSummary() {
+    const totalBudget = cats.reduce((a, c) => a + c.budget, 0);
+    const totalSpent = cats.reduce((a, c) => a + Object.values(c.by).reduce((x, y) => x + y, 0), 0);
+    const billsLeft = bills.reduce((a, b) => a + b.amt, 0);
+    const safe = totalBudget - totalSpent - billsLeft;
+    $("safe").innerHTML = `${usd(safe)} <small>left</small>`;
+    $("safeNote").textContent = `After the ${usd(billsLeft)} in bills still due. That is about ${usd(safe / 7)} a day for the next 7 days.`;
+    const pct = Math.min(1, totalSpent / totalBudget);
+    $("paceFill").style.width = (pct * 100).toFixed(1) + "%";
+    $("paceToday").style.left = (MONTH_PCT * 100) + "%";
+    $("paceSpent").textContent = `${usd(totalSpent)} of ${usd(totalBudget)} budget used (${Math.round(pct * 100)}%)`;
+
+    const shown = cats.reduce((a, c) => a + spentFor(c), 0);
+    $("kSpent").textContent = usd(shown);
+    $("kSpentD").innerHTML = who === "all"
+      ? `<span class="pill good">$410 less</span>than this point in September`
+      : `<span class="pill neutral">${Math.round(shown / totalSpent * 100)}% of household</span>by ${memberById[who].name}`;
+  }
+
+  function renderCats() {
+    $("cats").innerHTML = cats.map(c => {
+      const s = spentFor(c);
+      const ratio = s / c.budget;
+      const expected = c.fixed ? 1 : MONTH_PCT;
+      let state = "good", label = "On track";
+      if (who === "all") {
+        if (ratio > 1) { state = "bad"; label = usd(s - c.budget) + " over"; }
+        else if (!c.fixed && ratio > expected + 0.1) { state = "warn"; label = "Ahead of pace"; }
+        else label = usd(c.budget - s) + " left";
+      } else { state = "neutral"; label = Math.round(ratio * 100) + "%"; }
+      const barCls = state === "bad" ? "bad" : state === "warn" ? "warn" : "";
+      return `<div class="cat">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="${c.icon}"/></svg></div>
+        <div style="min-width:0"><div class="row1"><b style="font-weight:500">${c.name}</b><span>${usd(s)} / ${usd(c.budget)}</span></div>
+          <div class="bar ${barCls}"><i style="width:${Math.min(100, ratio * 100).toFixed(1)}%"></i>${c.fixed ? "" : `<b class="pace-mark" style="left:${MONTH_PCT * 100}%"></b>`}</div></div>
+        <span class="pill ${state}">${label}</span></div>`;
+    }).join("");
+  }
+
+  function renderTx() {
+    const rows = tx.filter(t => who === "all" || t.who === who);
+    $("txBody").innerHTML = rows.length ? rows.map(t => {
+      const m = memberById[t.who];
+      return `<tr><td class="num" style="color:var(--ink-2);white-space:nowrap">${t.d}</td><td>${t.m}</td>
+        <td><span class="tag ${t.review ? "review" : ""}">${t.review ? "Needs review · " : ""}${t.c}</span></td>
+        <td><span class="who"><span class="av" style="background:${m.color}">${m.name[0]}</span>${m.name}</span></td>
+        <td class="amt ${t.amt > 0 ? "in" : ""}">${t.amt > 0 ? "+" : ""}${usd(t.amt, 2)}</td></tr>`;
+    }).join("") : `<tr><td colspan="5" style="color:var(--ink-2)">No recent transactions for ${memberById[who].name}.</td></tr>`;
+  }
+
+  function renderBills() {
+    $("billList").innerHTML = bills.map(b => `<li><div class="date"><b class="num">${b.day}</b><span>Oct</span></div>
+      <div class="li-main"><b>${b.name}</b><span>${b.sub}</span></div><div class="amt">${usd(b.amt, 2)}</div></li>`).join("");
+  }
+
+  function renderGoals() {
+    const C = 2 * Math.PI * 26;
+    $("goalList").innerHTML = goals.map((g, i) => {
+      const p = g.saved / g.target;
+      const color = i === 0 ? "var(--teal)" : i === 1 ? "var(--clay)" : "var(--brown)";
+      return `<div class="goal">
+        <svg class="ring" viewBox="0 0 64 64" role="img" aria-label="${Math.round(p * 100)}% saved">
+          <circle cx="32" cy="32" r="26" fill="none" stroke="var(--sunk)" stroke-width="7"/>
+          <circle cx="32" cy="32" r="26" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
+            stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 32 32)"/>
+          <text x="32" y="36.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" font-family="Instrument Sans, sans-serif">${Math.round(p * 100)}%</text>
+        </svg>
+        <div><b>${g.name}</b><span>${usd(g.saved)} of ${usd(g.target)} · ${g.note}</span></div></div>`;
+    }).join("");
+  }
+
+  function renderFlow() {
+    const W = 640, H = 240, L = 48, R = 12, T = 14, B = 30;
+    const max = 12000, ticks = [0, 3000, 6000, 9000, 12000];
+    const y = v => T + (H - T - B) * (1 - v / max);
+    const band = (W - L - R) / flow.length, bw = Math.min(26, band * 0.28);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Income versus spending, May to October">`;
+    ticks.forEach(t => {
+      s += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"/>`;
+      s += `<text x="${L - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="var(--ink-2)" font-family="JetBrains Mono, monospace">${t / 1000}k</text>`;
+    });
+    flow.forEach((f, i) => {
+      const cx = L + band * i + band / 2;
+      const over = f.sp > f.inc;
+      s += `<rect x="${cx - bw - 2}" y="${y(f.inc)}" width="${bw}" height="${y(0) - y(f.inc)}" rx="4" fill="var(--teal)"/>`;
+      s += `<rect x="${cx + 2}" y="${y(f.sp)}" width="${bw}" height="${y(0) - y(f.sp)}" rx="4" fill="var(--clay)" ${f.partial ? 'fill-opacity=".55"' : ""}/>`;
+      s += `<text x="${cx}" y="${H - 10}" text-anchor="middle" font-size="12" fill="var(--ink-2)" font-family="Instrument Sans, sans-serif">${f.m}${f.partial ? "*" : ""}</text>`;
+      const net = f.inc - f.sp;
+      s += `<text x="${cx}" y="${y(Math.max(f.inc, f.sp)) - 6}" text-anchor="middle" font-size="11" font-weight="600" fill="${over ? "var(--bad)" : "var(--teal)"}" font-family="JetBrains Mono, monospace">${net >= 0 ? "+" : "−"}${(Math.abs(net) / 1000).toFixed(1)}k</text>`;
+    });
+    s += `</svg><div class="legend-row" style="margin-top:6px"><span>* October to date. Numbers above bars = what was left over.</span></div>`;
+    $("flowChart").innerHTML = s;
+  }
+
+  function renderAll() { renderMembers(); renderSummary(); renderCats(); renderTx(); }
+
+  $("memberSeg").addEventListener("click", e => {
+    const b = e.target.closest("button[data-id]");
+    if (!b) return;
+    who = b.dataset.id;
+    renderAll();
+  });
+
+  $("themeBtn").addEventListener("click", () => {
+    const root = document.documentElement;
+    const isDark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = isDark ? "light" : "dark";
+  });
+
+  renderAll(); renderBills(); renderGoals(); renderFlow();
+})();
+</script>
